@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ORCA — Maritime AI Advisory</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: #ffffff; color: #1f2937; height: 100vh; display: flex; overflow: hidden; }
+
+    .sidebar {
+      width: 260px;
+      background: #f9fafb;
+      border-right: 1px solid #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      transition: transform 0.2s ease;
+    }
+    .sidebar-header {
+      padding: 14px 16px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .new-chat-btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: #2563eb;
+      color: #ffffff;
+      border: none;
+      padding: 9px 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .new-chat-btn:hover { background: #1d4ed8; }
+
+    .session-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .session-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      color: #374151;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .session-item:hover { background: #f3f4f6; }
+    .session-item.active { background: #e5e7eb; font-weight: 600; color: #111827; }
+    .session-title {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      margin-right: 6px;
+    }
+    .del-btn {
+      background: transparent;
+      border: none;
+      color: #9ca3af;
+      cursor: pointer;
+      font-size: 0.9rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      display: none;
+    }
+    .session-item:hover .del-btn { display: inline-block; }
+    .del-btn:hover { color: #dc2626; background: #fee2e2; }
+
+    .sidebar-footer {
+      padding: 12px 16px;
+      border-top: 1px solid #e5e7eb;
+    }
+    .clear-btn {
+      width: 100%;
+      background: transparent;
+      border: 1px dashed #d1d5db;
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      color: #6b7280;
+      cursor: pointer;
+    }
+    .clear-btn:hover { border-color: #dc2626; color: #dc2626; }
+
+    .main-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      position: relative;
+    }
+
+    header {
+      padding: 14px 20px;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #ffffff;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .menu-toggle {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      color: #4b5563;
+    }
+    .brand { font-size: 1.05rem; font-weight: 600; color: #111827; }
+    .map-link {
+      text-decoration: none;
+      font-size: 0.85rem;
+      color: #2563eb;
+      background: #eff6ff;
+      padding: 6px 12px;
+      border-radius: 8px;
+    }
+
+    main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 16px 120px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .chat-stream {
+      width: 100%;
+      max-width: 720px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .message {
+      display: flex;
+      flex-direction: column;
+      max-width: 82%;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+    .message.bot {
+      align-self: flex-start;
+      background: #f3f4f6;
+      color: #111827;
+      padding: 12px 16px;
+      border-radius: 16px;
+      border-bottom-left-radius: 4px;
+    }
+    .message.user {
+      align-self: flex-end;
+      background: #2563eb;
+      color: #ffffff;
+      padding: 12px 16px;
+      border-radius: 16px;
+      border-bottom-right-radius: 4px;
+    }
+
+    .typing-indicator {
+      display: inline-flex !important;
+      flex-direction: row !important;
+      align-items: center;
+      gap: 6px;
+      padding: 12px 18px;
+      width: fit-content;
+      min-height: 24px;
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      background: #6b7280;
+      border-radius: 50%;
+      display: inline-block;
+      animation: bounce 1.4s infinite ease-in-out both;
+    }
+    .dot:nth-child(1) { animation-delay: -0.32s; }
+    .dot:nth-child(2) { animation-delay: -0.16s; }
+    .dot:nth-child(3) { animation-delay: 0s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+      40% { transform: scale(1.15); opacity: 1; }
+    }
+
+    .bottom-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 16px 20px 24px;
+      background: linear-gradient(180deg, rgba(255,255,255,0) 0%, #ffffff 35%);
+      display: flex;
+      justify-content: center;
+    }
+
+    .input-box {
+      width: 100%;
+      max-width: 720px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #ffffff;
+      border: 1px solid #d1d5db;
+      border-radius: 28px;
+      padding: 8px 14px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+    .input-box:focus-within {
+      border-color: #2563eb;
+      box-shadow: 0 4px 16px rgba(37,99,235,0.15);
+    }
+    .input-box input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-size: 0.95rem;
+      background: transparent;
+      padding: 4px;
+    }
+
+    .btn-icon {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      color: #6b7280;
+    }
+    .btn-icon:hover { background: #f3f4f6; color: #111827; }
+    .btn-icon.recording { color: #dc2626; background: #fee2e2; }
+
+    .discard-voice-btn {
+      color: #9ca3af;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+    }
+    .discard-voice-btn:hover {
+      color: #dc2626 !important;
+      background: #fee2e2 !important;
+    }
+
+    .action-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.2s;
+    }
+    .action-btn.send-mode {
+      background: #2563eb;
+      color: #ffffff;
+    }
+    .action-btn.send-mode:hover { background: #1d4ed8; }
+    .action-btn.stop-mode {
+      background: #111827;
+      color: #ffffff;
+    }
+    .action-btn.stop-mode:hover { background: #374151; }
+  </style>
+</head>
+<body>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <button class="new-chat-btn" onclick="startNewChat()">
+        <span>+</span> New Chat
+      </button>
+    </div>
+    <div class="session-list" id="sessionList"></div>
+    <div class="sidebar-footer">
+      <button class="clear-btn" onclick="clearAllHistory()">Clear all chats</button>
+    </div>
+  </aside>
+
+  <div class="main-wrapper">
+    <header>
+      <div class="header-left">
+        <button class="menu-toggle" onclick="toggleSidebar()" title="Toggle sidebar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+        <div class="brand">ORCA</div>
+      </div>
+      <a href="/map" class="map-link" target="_self">Open Map ↗</a>
+    </header>
+
+    <main id="chatScrollArea">
+      <div class="chat-stream" id="chatStream"></div>
+    </main>
+
+    <div class="bottom-bar">
+      <div class="input-box">
+        <button class="btn-icon" id="voiceBtn" title="Voice note">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+            <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+          </svg>
+        </button>
+        <input type="text" id="textInput" placeholder="Ask a question..." autocomplete="off" />
+        
+        <button class="btn-icon discard-voice-btn" id="discardVoiceBtn" title="Discard voice recording" style="display: none;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+
+        <button class="action-btn send-mode" id="actionBtn" title="Send">
+          <svg id="sendIcon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+          </svg>
+          <svg id="stopIcon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="display: none;">
+            <rect x="4" y="4" width="16" height="16" rx="2" ry="2"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentSessionId = localStorage.getItem("orca_session_id") || null;
+    let userCoords = { lat: 17.5, lon: 83.5 };
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let pendingVoiceBlob = null;
+    let activeAbortController = null;
+    let isGenerating = false;
+    let loadingBubble = null;
+    const bgAudio = new Audio();
+
+    const discardVoiceBtn = document.getElementById("discardVoiceBtn");
+    const textInput = document.getElementById("textInput");
+    const voiceBtn = document.getElementById("voiceBtn");
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          userCoords.lat = pos.coords.latitude;
+          userCoords.lon = pos.coords.longitude;
+        },
+        () => {}
+      );
+    }
+
+    function toggleSidebar() {
+      const sidebar = document.getElementById("sidebar");
+      sidebar.style.display = sidebar.style.display === "none" ? "flex" : "none";
+    }
+
+    function updateStatus(status, depth, borderDist) {
+      // Intentionally empty: telemetry elements removed from UI
+    }
+
+    function addMessage(role, text) {
+      const stream = document.getElementById("chatStream");
+      const div = document.createElement("div");
+      div.className = `message ${role}`;
+      div.innerText = text;
+      stream.appendChild(div);
+      const scrollArea = document.getElementById("chatScrollArea");
+      scrollArea.scrollTo({ top: scrollArea.scrollHeight, behavior: "smooth" });
+      return div;
+    }
+
+    function showLoadingIndicator() {
+      if (loadingBubble) return;
+      const stream = document.getElementById("chatStream");
+      loadingBubble = document.createElement("div");
+      loadingBubble.className = "message bot typing-indicator";
+      loadingBubble.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
+      stream.appendChild(loadingBubble);
+      const scrollArea = document.getElementById("chatScrollArea");
+      scrollArea.scrollTo({ top: scrollArea.scrollHeight, behavior: "smooth" });
+    }
+
+    function hideLoadingIndicator() {
+      if (loadingBubble) {
+        loadingBubble.remove();
+        loadingBubble = null;
+      }
+    }
+
+    function setGeneratingState(generating) {
+      isGenerating = generating;
+      const btn = document.getElementById("actionBtn");
+      const sendIcon = document.getElementById("sendIcon");
+      const stopIcon = document.getElementById("stopIcon");
+
+      if (generating) {
+        btn.className = "action-btn stop-mode";
+        btn.title = "Stop response";
+        sendIcon.style.display = "none";
+        stopIcon.style.display = "block";
+      } else {
+        btn.className = "action-btn send-mode";
+        btn.title = "Send";
+        sendIcon.style.display = "block";
+        stopIcon.style.display = "none";
+      }
+    }
+
+    function stopCurrentResponse() {
+      if (activeAbortController) {
+        activeAbortController.abort();
+        activeAbortController = null;
+      }
+      hideLoadingIndicator();
+      bgAudio.pause();
+      bgAudio.currentTime = 0;
+      setGeneratingState(false);
+    }
+
+    function clearPendingVoice() {
+      pendingVoiceBlob = null;
+      textInput.value = "";
+      textInput.placeholder = "Ask a question...";
+      textInput.readOnly = false;
+      discardVoiceBtn.style.display = "none";
+    }
+
+    discardVoiceBtn.addEventListener("click", () => {
+      clearPendingVoice();
+    });
+
+    function checkMapIntent(text) {
+      if (!text) return false;
+      const clean = text.toLowerCase().trim();
+      return (
+        clean === "map" ||
+        clean.includes("open map") ||
+        clean.includes("show map") ||
+        clean.includes("view map") ||
+        clean.includes("go to map") ||
+        clean.includes("navigate to map")
+      );
+    }
+
+    async function loadSessions() {
+      try {
+        const res = await fetch("/api/sessions");
+        const sessions = await res.json();
+        const container = document.getElementById("sessionList");
+        container.innerHTML = "";
+
+        sessions.forEach(sess => {
+          const item = document.createElement("div");
+          item.className = `session-item ${sess.session_id === currentSessionId ? "active" : ""}`;
+          
+          const titleSpan = document.createElement("span");
+          titleSpan.className = "session-title";
+          titleSpan.innerText = sess.title;
+
+          const delBtn = document.createElement("button");
+          delBtn.className = "del-btn";
+          delBtn.title = "Delete chat";
+          delBtn.innerHTML = "&times;";
+          delBtn.onclick = (e) => {
+            e.stopPropagation();
+            deleteSession(sess.session_id);
+          };
+
+          item.appendChild(titleSpan);
+          item.appendChild(delBtn);
+          item.onclick = () => switchSession(sess.session_id);
+          container.appendChild(item);
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function startNewChat() {
+      stopCurrentResponse();
+      clearPendingVoice();
+      try {
+        const res = await fetch("/api/sessions/new", { method: "POST" });
+        const data = await res.json();
+        currentSessionId = data.session_id;
+        localStorage.setItem("orca_session_id", currentSessionId);
+        
+        document.getElementById("chatStream").innerHTML = "";
+        addMessage("bot", "Hello! Ask your maritime questions below or send a voice message.");
+        await loadSessions();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function switchSession(sessionId) {
+      if (sessionId === currentSessionId) return;
+      stopCurrentResponse();
+      clearPendingVoice();
+      currentSessionId = sessionId;
+      localStorage.setItem("orca_session_id", sessionId);
+
+      try {
+        const res = await fetch(`/api/sessions/${sessionId}`);
+        if (!res.ok) throw new Error("Chat not found");
+        const data = await res.json();
+
+        const stream = document.getElementById("chatStream");
+        stream.innerHTML = "";
+
+        if (!data.history || data.history.length === 0) {
+          addMessage("bot", "Hello! Ask your maritime questions below or send a voice message.");
+        } else {
+          data.history.forEach(turn => {
+            addMessage(turn.role === "user" ? "user" : "bot", turn.content);
+          });
+        }
+        await loadSessions();
+      } catch (err) {
+        startNewChat();
+      }
+    }
+
+    async function deleteSession(sessionId) {
+      try {
+        await fetch(`/api/sessions/${sessionId}`, { method: "DELETE" });
+        if (currentSessionId === sessionId) {
+          await startNewChat();
+        } else {
+          await loadSessions();
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function clearAllHistory() {
+      if (!confirm("Are you sure you want to delete all chat history?")) return;
+      try {
+        await fetch("/api/sessions", { method: "DELETE" });
+        await startNewChat();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function sendQuery(text = null, audioBlob = null) {
+      if (text && checkMapIntent(text)) {
+        window.location.href = "/map";
+        return;
+      }
+
+      if (!currentSessionId) {
+        await startNewChat();
+      }
+
+      const isVoiceQuery = !!audioBlob;
+      const formData = new FormData();
+      formData.append("lat", userCoords.lat);
+      formData.append("lon", userCoords.lon);
+      formData.append("session_id", currentSessionId);
+
+      if (text) formData.append("message", text);
+      if (audioBlob) formData.append("audio", audioBlob, "query.webm");
+
+      stopCurrentResponse();
+      activeAbortController = new AbortController();
+      setGeneratingState(true);
+      showLoadingIndicator();
+
+      try {
+        const res = await fetch("/chat-fishery", {
+          method: "POST",
+          body: formData,
+          signal: activeAbortController.signal
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.detail || `Server error (${res.status})`);
+        }
+
+        const data = await res.json();
+        hideLoadingIndicator();
+
+        if (data.session_id && data.session_id !== currentSessionId) {
+          currentSessionId = data.session_id;
+          localStorage.setItem("orca_session_id", currentSessionId);
+        }
+
+        if (checkMapIntent(data.reply)) {
+          window.location.href = "/map";
+          return;
+        }
+
+        addMessage("bot", data.reply);
+        updateStatus(data.geo_status, data.depth_m, data.distance_to_imbl_m);
+        await loadSessions();
+
+        if (isVoiceQuery && data.audio_base64) {
+          bgAudio.src = data.audio_base64;
+          bgAudio.play().catch(() => {});
+          bgAudio.onended = () => setGeneratingState(false);
+        } else {
+          setGeneratingState(false);
+        }
+      } catch (err) {
+        hideLoadingIndicator();
+        if (err.name === "AbortError") {
+          addMessage("bot", "Response stopped.");
+        } else {
+          addMessage("bot", "⚠️ " + (err.message || "Failed to process request."));
+        }
+        setGeneratingState(false);
+      } finally {
+        activeAbortController = null;
+      }
+    }
+
+    function handleActionClick() {
+      if (isGenerating) {
+        stopCurrentResponse();
+        return;
+      }
+
+      const val = textInput.value.trim();
+
+      if (pendingVoiceBlob) {
+        const blobToSend = pendingVoiceBlob;
+        clearPendingVoice();
+        addMessage("user", "🎤 [Voice Query]");
+        sendQuery(null, blobToSend);
+        return;
+      }
+
+      if (!val) return;
+      addMessage("user", val);
+      textInput.value = "";
+      sendQuery(val, null);
+    }
+
+    document.getElementById("actionBtn").addEventListener("click", handleActionClick);
+    textInput.addEventListener("keydown", e => {
+      if (e.key === "Enter" && !isGenerating) handleActionClick();
+      if (e.key === "Escape" && pendingVoiceBlob) {
+        clearPendingVoice();
+      }
+    });
+
+    voiceBtn.addEventListener("click", async () => {
+      if (mediaRecorder && mediaRecorder.state === "recording") {
+        mediaRecorder.stop();
+        voiceBtn.classList.remove("recording");
+        return;
+      }
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+        mediaRecorder.onstop = () => {
+          pendingVoiceBlob = new Blob(audioChunks, { type: "audio/webm" });
+          textInput.value = "🎤 Voice recording ready";
+          textInput.readOnly = true;
+          discardVoiceBtn.style.display = "flex";
+          stream.getTracks().forEach(t => t.stop());
+        };
+
+        mediaRecorder.start();
+        voiceBtn.classList.add("recording");
+      } catch {
+        alert("Microphone permission denied or unavailable.");
+      }
+    });
+
+    window.addEventListener("DOMContentLoaded", async () => {
+      if (currentSessionId) {
+        try {
+          const res = await fetch(`/api/sessions/${currentSessionId}`);
+          if (res.ok) {
+            const data = await res.json();
+            const stream = document.getElementById("chatStream");
+            stream.innerHTML = "";
+            if (!data.history || data.history.length === 0) {
+              addMessage("bot", "Hello! Ask your maritime questions below or send a voice message.");
+            } else {
+              data.history.forEach(turn => {
+                addMessage(turn.role === "user" ? "user" : "bot", turn.content);
+              });
+            }
+            await loadSessions();
+            return;
+          }
+        } catch (e) {}
+      }
+      await startNewChat();
+    });
+  </script>
+</body>
+</html>

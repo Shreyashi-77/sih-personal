@@ -1,0 +1,193 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "India-Sri Lanka boundary: Palk Strait / Adam's Bridge",
+        "boundary_type": "IMBL / international maritime boundary",
+        "countries": "India - Sri Lanka",
+        "treaty": "1974 India-Sri Lanka Agreement",
+        "source_note": "Treaty turning points; boundary is defined by arcs of great circles."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            80.05,
+            10.083333333333334
+          ],
+          [
+            79.58333333333333,
+            9.95
+          ],
+          [
+            79.37666666666667,
+            9.669166666666667
+          ],
+          [
+            79.51166666666667,
+            9.363333333333333
+          ],
+          [
+            79.53333333333333,
+            9.216666666666667
+          ],
+          [
+            79.53333333333333,
+            9.1
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "India-Sri Lanka boundary: Gulf of Mannar",
+        "boundary_type": "IMBL / international maritime boundary",
+        "countries": "India - Sri Lanka",
+        "treaty": "1976 India-Sri Lanka Maritime Boundary Agreement",
+        "source_note": "Treaty turning points; boundary is defined by arcs of great circles."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            79.53333333333333,
+            9.1
+          ],
+          [
+            79.52166666666666,
+            9
+          ],
+          [
+            79.48833333333333,
+            8.896666666666667
+          ],
+          [
+            79.30333333333333,
+            8.666666666666666
+          ],
+          [
+            79.21666666666667,
+            8.62
+          ],
+          [
+            79.07833333333333,
+            8.52
+          ],
+          [
+            78.92333333333333,
+            8.37
+          ],
+          [
+            78.895,
+            8.203333333333333
+          ],
+          [
+            78.76166666666667,
+            7.588333333333333
+          ],
+          [
+            78.64666666666666,
+            7.35
+          ],
+          [
+            78.20333333333333,
+            6.513333333333334
+          ],
+          [
+            77.845,
+            5.898333333333333
+          ],
+          [
+            77.17666666666666,
+            5
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "India-Sri Lanka boundary: Bay of Bengal",
+        "boundary_type": "IMBL / international maritime boundary",
+        "countries": "India - Sri Lanka",
+        "treaty": "1976 India-Sri Lanka Maritime Boundary Agreement",
+        "source_note": "Treaty turning points; boundary is defined by arcs of great circles."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            80.05,
+            10.083333333333334
+          ],
+          [
+            80.08333333333333,
+            10.096666666666666
+          ],
+          [
+            80.15833333333333,
+            10.14
+          ],
+          [
+            80.76666666666667,
+            10.55
+          ],
+          [
+            81.04166666666667,
+            10.695
+          ],
+          [
+            81.93333333333334,
+            11.045
+          ],
+          [
+            82.40666666666667,
+            11.266666666666667
+          ],
+          [
+            83.36666666666666,
+            11.443333333333333
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "India-Sri Lanka boundary: Gulf of Mannar extension",
+        "boundary_type": "IMBL / international maritime boundary",
+        "countries": "India - Sri Lanka",
+        "treaty": "1976 Supplementary Agreement",
+        "source_note": "Extension from position 13m to trijunction point T; boundary is defined by an arc of a great circle."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            77.17666666666666,
+            5
+          ],
+          [
+            77.02333333333333,
+            4.784
+          ]
+        ]
+      }
+    }
+  ],
+  "metadata": {
+    "dataset": "Starter IMBL boundary layer for ORCA",
+    "crs": "EPSG:4326",
+    "coverage": "India-Sri Lanka treaty-defined maritime boundary only",
+    "important_note": "This is NOT a complete pan-India IMBL layer. Do not use it as a legal/navigational substitute. Add authoritative India-Pakistan, India-Bangladesh, India-Myanmar and other relevant boundary segments from the responsible authority before production use.",
+    "source": "United Nations treaty texts reproduced/indexed by Marine Regions",
+    "sources": [
+      "1974 India-Sri Lanka Agreement",
+      "1976 India-Sri Lanka Maritime Boundary Agreement",
+      "1976 Supplementary Agreement"
+    ]
+  }
+}

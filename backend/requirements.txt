@@ -1,0 +1,12 @@
+# ORCA backend runtime dependencies (tested with Python 3.10)
+fastapi==0.141.1
+uvicorn[standard]==0.41.0
+requests==2.34.0
+geopandas==1.1.4
+rasterio==1.4.4
+shapely==2.1.2
+pyproj==3.7.1
+python-dotenv==1.2.1
+google-genai==1.47.0
+gTTS==2.5.4
+python-multipart==0.0.20

@@ -1,0 +1,112 @@
+01-09-2026 20:33:52 - ERROR - 
+
+Error Fetching Data from Search Endpoint.
+
+Error Message: Bad Input Value; 2026-08-25T00:00:00
+Error Details: {'timestamp': '01-09-2026 08:33:53', 'statusCode': 400, 'message': ['Bad Input Value; 2026-08-25T00:00:00', 'Bad Input Value; minLat,maxLat,minLon,maxLon', 'Bad Input Value; 2026-08-25T23:59:59']}
+
+01-09-2026 20:38:34 - ERROR - 
+
+Error Fetching Data from Search Endpoint.
+
+Error Message: Bad Input Value; minLat,maxLat,minLon,maxLon
+Error Details: {'timestamp': '01-09-2026 08:38:35', 'statusCode': 400, 'message': ['Bad Input Value; minLat,maxLat,minLon,maxLon', 'Bad Input Value; 2026-08-25T00:00:00', 'Bad Input Value; 2026-08-25T23:59:59']}
+
+01-09-2026 20:39:38 - ERROR - 
+
+Error Fetching Data from Search Endpoint.
+
+Error Message: Bad Input Value; minLat,maxLat,minLon,maxLon
+Error Details: {'timestamp': '01-09-2026 08:39:38', 'statusCode': 400, 'message': ['Bad Input Value; minLat,maxLat,minLon,maxLon', 'Bad Input Value; 2026-08-25T00:00:00', 'Bad Input Value; 2026-08-25T23:59:59']}
+
+01-09-2026 20:41:09 - ERROR - 
+
+Error Fetching Data from Search Endpoint.
+
+Error Message: Bad Input Value; minLat,maxLat,minLon,maxLon
+Error Details: {'timestamp': '01-09-2026 08:41:10', 'statusCode': 400, 'message': ['Bad Input Value; minLat,maxLat,minLon,maxLon', 'Bad Input Value; 2026-08-25T00:00:00', 'Bad Input Value; 2026-08-25T23:59:59']}
+
+01-09-2026 20:42:14 - ERROR - 
+
+Error Fetching Data from Search Endpoint.
+
+Error Message: Bad Input Value; 2026-08-25T00:00:00
+Error Details: {'timestamp': '01-09-2026 08:42:15', 'statusCode': 400, 'message': ['Bad Input Value; 2026-08-25T00:00:00', 'Bad Input Value; 2026-08-25T23:59:59', 'Bad Input Value; minLat,maxLat,minLon,maxLon']}
+
+01-09-2026 20:42:48 - ERROR - 
+
+Error Fetching Data from Search Endpoint.
+
+Error Message: Bad Input Value; minLat,maxLat,minLon,maxLon
+Error Details: {'timestamp': '01-09-2026 08:42:49', 'statusCode': 400, 'message': ['Bad Input Value; minLat,maxLat,minLon,maxLon', 'Bad Input Value; 2026-08-25T23:59:59', 'Bad Input Value; 2026-08-25T00:00:00']}
+
+01-09-2026 20:44:50 - ERROR - 
+
+Error Fetching Data from Search Endpoint.
+
+Error Message: Bad Input Value; 2026-08-25T23:59:59
+Error Details: {'timestamp': '01-09-2026 08:44:51', 'statusCode': 400, 'message': ['Bad Input Value; 2026-08-25T23:59:59', 'Bad Input Value; minLat,maxLat,minLon,maxLon', 'Bad Input Value; 2026-08-25T00:00:00']}
+
+01-09-2026 20:45:05 - ERROR - 
+
+Error Fetching Data from Search Endpoint.
+
+Error Message: Bad Input Value; minLat,maxLat,minLon,maxLon
+Error Details: {'timestamp': '01-09-2026 08:45:06', 'statusCode': 400, 'message': ['Bad Input Value; minLat,maxLat,minLon,maxLon', 'Bad Input Value; 2026-08-25T23:59:59', 'Bad Input Value; 2026-08-25T00:00:00']}
+
+01-09-2026 20:45:12 - ERROR - 
+
+Error Fetching Data from Search Endpoint.
+
+Error Message: Bad Input Value; 2026-08-25T00:00:00
+Error Details: {'timestamp': '01-09-2026 08:45:13', 'statusCode': 400, 'message': ['Bad Input Value; 2026-08-25T00:00:00', 'Bad Input Value; 2026-08-25T23:59:59', 'Bad Input Value; minLat,maxLat,minLon,maxLon']}
+
+01-09-2026 20:46:34 - ERROR - 
+
+Error Fetching Data from Search Endpoint.
+
+Error Message: Bad Input Value; 2026-08-25T23:59:59
+Error Details: {'timestamp': '01-09-2026 08:46:35', 'statusCode': 400, 'message': ['Bad Input Value; 2026-08-25T23:59:59', 'Bad Input Value; minLat,maxLat,minLon,maxLon', 'Bad Input Value; 2026-08-25T00:00:00']}
+
+01-09-2026 20:46:57 - ERROR - 
+
+Error Fetching Data from Search Endpoint.
+
+Error Message: Bad Input Value; 2026-08-25T00:00:00
+Error Details: {'timestamp': '01-09-2026 08:46:58', 'statusCode': 400, 'message': ['Bad Input Value; 2026-08-25T00:00:00', 'Bad Input Value; minLat,maxLat,minLon,maxLon', 'Bad Input Value; 2026-08-25T23:59:59']}
+
+01-09-2026 20:47:31 - ERROR - 
+
+Error Fetching Data from Search Endpoint.
+
+Error Message: Bad Input Value; minLat,maxLat,minLon,maxLon
+Error Details: {'timestamp': '01-09-2026 08:47:32', 'statusCode': 400, 'message': ['Bad Input Value; minLat,maxLat,minLon,maxLon', 'Bad Input Value; 2026-08-25T00:00:00', 'Bad Input Value; 2026-08-25T23:59:59']}
+
+01-09-2026 20:49:30 - ERROR - 
+
+Error Fetching Data from Search Endpoint.
+
+Error Message: Bad Input Value; 2026-08-25T23:59:59
+Error Details: {'timestamp': '01-09-2026 08:49:31', 'statusCode': 400, 'message': ['Bad Input Value; 2026-08-25T23:59:59', 'Bad Input Value; minLat,maxLat,minLon,maxLon', 'Bad Input Value; 2026-08-25T00:00:00']}
+
+01-09-2026 20:52:24 - ERROR - 
+
+Error Fetching Data from Search Endpoint.
+
+Error Message: Bad Input Value; 2026-08-25T00:00:00
+Error Details: {'timestamp': '01-09-2026 08:52:25', 'statusCode': 400, 'message': ['Bad Input Value; 2026-08-25T00:00:00', 'Bad Input Value; minLat,maxLat,minLon,maxLon', 'Bad Input Value; 2026-08-25T23:59:59']}
+
+01-09-2026 20:55:21 - ERROR - 
+
+Error Fetching Data from Search Endpoint.
+
+Error Message: Bad Input Value; 2026-08-25T00:00:00
+Error Details: {'timestamp': '01-09-2026 08:55:22', 'statusCode': 400, 'message': ['Bad Input Value; 2026-08-25T00:00:00', 'Bad Input Value; minLat,maxLat,minLon,maxLon', 'Bad Input Value; 2026-08-25T23:59:59']}
+
+01-09-2026 20:59:30 - ERROR - 
+
+Error Fetching Data from Search Endpoint.
+
+Error Message: Bad Input Value; 500
+Error Details: {'timestamp': '01-09-2026 08:59:31', 'statusCode': 400, 'message': ['Bad Input Value; 500']}
+
