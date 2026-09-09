@@ -16,6 +16,13 @@ from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
+from db import (
+    get_user_sessions_db,
+    save_single_session_db,
+    delete_session_db,
+    clear_user_sessions_db
+)
+
 try:
   from google import genai
   from google.genai import types
@@ -28,13 +35,13 @@ try:
 except ImportError:
   gTTS = None
 
-# Local Speech-to-Text: zero Gemini tokens consumed for audio input
 try:
   from faster_whisper import WhisperModel
-  # Lightweight tiny model runs fast on CPU (~75 MB)
-  stt_model = WhisperModel("tiny", device="cpu", compute_type="int8")
+
+  stt_model = WhisperModel(
+      "tiny", device="cpu", compute_type="int8", cpu_threads=2
+  )
 except Exception as e:
-  print(f"[STT Warning] Local Whisper not loaded ({e}). Install with 'pip install faster-whisper'.")
   stt_model = None
 
 import requests
@@ -44,7 +51,6 @@ from shapely.geometry import shape
 load_dotenv()
 
 geo_checker: BoundaryChecker = None  # type: ignore
-SESSIONS_FILE = Path("chat_sessions.json")
 
 raw_keys = os.getenv("GEMINI_API_KEYS", os.getenv("GEMINI_API_KEY", ""))
 API_KEYS = [k.strip() for k in raw_keys.split(",") if k.strip()]
@@ -52,7 +58,7 @@ key_cycle = itertools.cycle(API_KEYS) if API_KEYS else None
 key_lock = threading.Lock()
 
 last_request_time = 0.0
-RATE_LIMIT_DELAY = 1.0  #
+RATE_LIMIT_DELAY = 1.0
 
 INCOIS_URL = "https://incois.gov.in/geoserver/PFZ_Automation/ows"
 PFZ_CACHE_TTL_SECONDS = 3600
@@ -84,8 +90,8 @@ def get_weather_data(latitude: float, longitude: float) -> dict[str, str]:
       wind_speed = _first_value(hourly.get("wind_speed_10m"))
       if wind_speed is not None:
         weather["wind"] = f"{wind_speed:.1f} km/h"
-  except Exception as err:
-    print(f"Weather data unavailable: {err}")
+  except Exception:
+    pass
 
   try:
     marine_response = requests.get(
@@ -106,23 +112,24 @@ def get_weather_data(latitude: float, longitude: float) -> dict[str, str]:
         weather["temp"] = f"{sea_temperature:.1f}°C"
       if wave_height is not None:
         weather["waves"] = f"{wave_height:.1f} m"
-  except Exception as err:
-    print(f"Marine data unavailable: {err}")
+  except Exception:
+    pass
 
   return weather
 
 
 def get_next_client() -> Any:
   if key_cycle is None or genai is None:
-    raise RuntimeError("Chatbot is not configured: set GEMINI_API_KEYS in backend/.env.")
+    raise RuntimeError("Chatbot is not configured.")
   with key_lock:
     selected_key = next(key_cycle)
   return genai.Client(api_key=selected_key)
 
+
 def execute_with_fallback(system_instruction: str, gemini_contents: list):
   global last_request_time
   if not API_KEYS or genai is None or types is None:
-    raise RuntimeError("Chatbot is not configured: install google-genai and set GEMINI_API_KEYS.")
+    raise RuntimeError("Chatbot is not configured.")
 
   with key_lock:
     now = time.time()
@@ -142,26 +149,28 @@ def execute_with_fallback(system_instruction: str, gemini_contents: list):
             config=types.GenerateContentConfig(
                 system_instruction=system_instruction,
                 response_mime_type="application/json",
-                max_output_tokens=800,  # Increased from 220 to prevent truncating JSON mid-string
+                max_output_tokens=800,
                 temperature=0.3,
             ),
         )
-        
+
         raw_text = response.text.strip()
         if raw_text.startswith("```"):
           raw_text = raw_text.strip("`").replace("json\n", "", 1).strip()
-          
+
         return json.loads(raw_text)
       except Exception as err:
         last_err = err
-        print(f"[Quota Rotation] Model '{model_name}' hit error: {err}. Trying next...")
 
-  raise RuntimeError(f"All API keys and models exhausted: {last_err}")
+  raise RuntimeError(f"All API keys exhausted: {last_err}")
 
 
 def get_pfz_data():
   now = time.time()
-  if pfz_cache["data"] is not None and now - pfz_cache["timestamp"] < PFZ_CACHE_TTL_SECONDS:
+  if (
+      pfz_cache["data"] is not None
+      and now - pfz_cache["timestamp"] < PFZ_CACHE_TTL_SECONDS
+  ):
     return pfz_cache["data"]
   try:
     response = requests.get(
@@ -179,7 +188,7 @@ def get_pfz_data():
     response.raise_for_status()
     data = response.json()
   except requests.RequestException as err:
-    raise HTTPException(status_code=502, detail=f"Unable to fetch PFZ data from INCOIS: {err}")
+    raise HTTPException(status_code=502, detail=f"INCOIS error: {err}")
   pfz_cache.update({"data": data, "timestamp": now})
   return data
 
@@ -193,11 +202,15 @@ def find_nearest_pfz(latitude: float, longitude: float, data: dict):
     try:
       geom = shape(geometry)
       if geom.geom_type in ("Point", "LineString", "LinearRing", "Polygon"):
-        coords = list(geom.coords) if geom.geom_type != "Polygon" else list(geom.exterior.coords)  # type: ignore
+        coords = (
+            list(geom.coords)
+            if geom.geom_type != "Polygon"
+            else list(geom.exterior.coords)
+        )
       elif geom.geom_type in ("MultiPoint", "MultiLineString"):
-        coords = [point for part in geom.geoms for point in part.coords]  # type: ignore
+        coords = [point for part in geom.geoms for point in part.coords]
       elif geom.geom_type == "MultiPolygon":
-        coords = [point for part in geom.geoms for point in part.exterior.coords]  # type: ignore
+        coords = [point for part in geom.geoms for point in part.exterior.coords]
       else:
         coords = []
       for lon2, lat2 in coords:
@@ -207,40 +220,15 @@ def find_nearest_pfz(latitude: float, longitude: float, data: dict):
           nearest = {
               "pfz_id": feature.get("id"),
               "distance_km": round(distance_m / 1000, 3),
-              "nearest_point": {"latitude": round(lat2, 6), "longitude": round(lon2, 6)},
+              "nearest_point": {
+                  "latitude": round(lat2, 6),
+                  "longitude": round(lon2, 6),
+              },
               "properties": feature.get("properties", {}),
           }
     except Exception:
       continue
   return nearest
-
-
-def load_all_user_data() -> dict:
-  if not SESSIONS_FILE.exists():
-    return {}
-  try:
-    with open(SESSIONS_FILE, "r", encoding="utf-8") as f:
-      return json.load(f)
-  except Exception:
-    return {}
-
-
-def save_all_user_data(data: dict):
-  with open(SESSIONS_FILE, "w", encoding="utf-8") as f:
-    json.dump(data, f, indent=2, ensure_ascii=False)
-
-
-def get_user_sessions(user_id: str) -> dict:
-  all_data = load_all_user_data()
-  if user_id not in all_data and any(isinstance(v, dict) and "history" in v for v in all_data.values()):
-    return all_data
-  return all_data.get(user_id, {})
-
-
-def save_user_sessions(user_id: str, sessions: dict):
-  all_data = load_all_user_data()
-  all_data[user_id] = sessions
-  save_all_user_data(all_data)
 
 
 def transcribe_audio_locally(audio_bytes: bytes) -> str:
@@ -250,8 +238,7 @@ def transcribe_audio_locally(audio_bytes: bytes) -> str:
     audio_stream = io.BytesIO(audio_bytes)
     segments, _ = stt_model.transcribe(audio_stream, beam_size=1)
     return " ".join([segment.text for segment in segments]).strip()
-  except Exception as err:
-    print(f"Local STT transcription error: {err}")
+  except Exception:
     return ""
 
 
@@ -263,7 +250,6 @@ async def lifespan(app: FastAPI):
   eez_path = os.path.join(base_dir, "india-eez.geojson")
   imbl_path = os.path.join(base_dir, "imbl.geojson")
 
-  print("\n[Lifespan] Preloading Maritime Layers...")
   try:
     geo_checker = BoundaryChecker(
         mpa_file=mpa_path,
@@ -271,10 +257,8 @@ async def lifespan(app: FastAPI):
         imbl_file=imbl_path,
         bathymetry_file=None,
     )
-    print("[Lifespan] Spatial safety engine initialized.")
-  except Exception as e:
-    print(f"[Lifespan] Spatial engine load warning: {e}")
-    geo_checker = None 
+  except Exception:
+    geo_checker = None
   yield
   if geo_checker and getattr(geo_checker, "bathymetry", None):
     assert geo_checker.bathymetry is not None
@@ -305,17 +289,28 @@ def serve_map():
 
 
 @app.get("/nearest-pfz")
-def nearest_pfz(latitude: float = Query(..., ge=-90, le=90), longitude: float = Query(..., ge=-180, le=180)):
+def nearest_pfz(
+    latitude: float = Query(..., ge=-90, le=90),
+    longitude: float = Query(..., ge=-180, le=180),
+):
   result = find_nearest_pfz(latitude, longitude, get_pfz_data())
   if result is None:
-    raise HTTPException(status_code=404, detail="No PFZ found for this location.")
-  return {"user_location": {"latitude": latitude, "longitude": longitude}, "nearest_pfz": result}
+    raise HTTPException(
+        status_code=404, detail="No PFZ found for this location."
+    )
+  return {
+      "user_location": {"latitude": latitude, "longitude": longitude},
+      "nearest_pfz": result,
+  }
 
 
 @app.get("/safety-check")
-def safety_check(latitude: float = Query(..., ge=-90, le=90), longitude: float = Query(..., ge=-180, le=180)):
+def safety_check(
+    latitude: float = Query(..., ge=-90, le=90),
+    longitude: float = Query(..., ge=-180, le=180),
+):
   if geo_checker is None:
-    raise HTTPException(status_code=503, detail="Safety engine is unavailable.")
+    raise HTTPException(status_code=503, detail="Safety engine unavailable.")
   try:
     return geo_checker.check_point(latitude=latitude, longitude=longitude)
   except ValueError as err:
@@ -323,7 +318,10 @@ def safety_check(latitude: float = Query(..., ge=-90, le=90), longitude: float =
 
 
 @app.get("/full-report")
-def full_report(latitude: float = Query(..., ge=-90, le=90), longitude: float = Query(..., ge=-180, le=180)):
+def full_report(
+    latitude: float = Query(..., ge=-90, le=90),
+    longitude: float = Query(..., ge=-180, le=180),
+):
   return {
       "location": {"latitude": latitude, "longitude": longitude},
       "nearest_pfz": find_nearest_pfz(latitude, longitude, get_pfz_data()),
@@ -349,13 +347,15 @@ def boundaries(boundary_type: str):
     raise HTTPException(status_code=404, detail="Unknown boundary layer")
   filepath = Path(__file__).with_name(filename)
   if not filepath.exists():
-    raise HTTPException(status_code=404, detail="Boundary layer is unavailable")
+    raise HTTPException(
+        status_code=404, detail="Boundary layer is unavailable"
+    )
   return FileResponse(filepath, media_type="application/geo+json")
 
 
 @app.get("/api/sessions")
 def list_sessions(user_id: str = Query("default_user")):
-  sessions = get_user_sessions(user_id)
+  sessions = get_user_sessions_db(user_id)
   session_list = []
   for s_id, data in sessions.items():
     session_list.append({
@@ -364,42 +364,45 @@ def list_sessions(user_id: str = Query("default_user")):
     })
   return session_list[::-1]
 
-
 @app.post("/api/sessions/new")
 def create_new_session(user_id: str = Query("default_user")):
-  sessions = get_user_sessions(user_id)
-  session_id = str(uuid.uuid4())
-  sessions[session_id] = {"title": "New Advisory Chat", "history": []}
-  save_user_sessions(user_id, sessions)
-  return {"session_id": session_id, "title": "New Advisory Chat"}
+    session_id = str(uuid.uuid4())
+    session_data = {"title": "New Advisory Chat", "history": []}
+    save_single_session_db(
+        user_id, 
+        session_id, 
+        session_data.get("title", "Advisory Chat"),
+    session_data.get("history", [])
+    )
+    return {"session_id": session_id, "title": "New Advisory Chat"}
 
 
 @app.get("/api/sessions/{session_id}")
 def get_session(session_id: str, user_id: str = Query("default_user")):
-  sessions = get_user_sessions(user_id)
+  sessions = get_user_sessions_db(user_id)
   if session_id not in sessions:
     raise HTTPException(status_code=404, detail="Chat not found")
   return sessions[session_id]
 
 
 @app.delete("/api/sessions/{session_id}")
-def delete_single_session(session_id: str, user_id: str = Query("default_user")):
-  sessions = get_user_sessions(user_id)
-  if session_id not in sessions:
+def delete_single_session(
+    session_id: str, user_id: str = Query("default_user")
+):
+  deleted = delete_session_db(user_id, session_id)
+  if not deleted:
     raise HTTPException(status_code=404, detail="Chat not found")
-  del sessions[session_id]
-  save_user_sessions(user_id, sessions)
   return {"status": "success", "message": f"Deleted session {session_id}"}
 
 
 @app.delete("/api/sessions")
 def clear_all_sessions(user_id: str = Query("default_user")):
-  save_user_sessions(user_id, {})
+  clear_user_sessions_db(user_id)
   return {"status": "success", "message": "Chat history cleared"}
 
 
 @app.post("/chat-fishery")
-async def chat_fishery(
+def chat_fishery(
     lat: float = Form(...),
     lon: float = Form(...),
     message: str = Form(None),
@@ -408,20 +411,25 @@ async def chat_fishery(
     audio: UploadFile = File(None),
 ):
   try:
-    sessions = get_user_sessions(user_id)
+    sessions = get_user_sessions_db(user_id)
     if not session_id or session_id not in sessions:
       session_id = str(uuid.uuid4())
-      sessions[session_id] = {"title": "New Advisory Chat", "history": []}
+      session_data = {"title": "New Advisory Chat", "history": []}
+    else:
+      session_data = sessions[session_id]
 
-    session_data = sessions[session_id]
     history = session_data.get("history", [])
 
     user_prompt = message.strip() if message else ""
     if audio:
-      audio_bytes = await audio.read()
+      audio_bytes = audio.file.read()
       transcribed_text = transcribe_audio_locally(audio_bytes)
       if transcribed_text:
-        user_prompt = f"{user_prompt} {transcribed_text}".strip() if user_prompt else transcribed_text
+        user_prompt = (
+            f"{user_prompt} {transcribed_text}".strip()
+            if user_prompt
+            else transcribed_text
+        )
       elif not user_prompt:
         user_prompt = "What is the sea condition and safety advisory right now?"
 
@@ -432,13 +440,13 @@ async def chat_fishery(
     if geo_checker:
       try:
         geo_data = geo_checker.check_point(latitude=lat, longitude=lon)
-      except Exception as geo_err:
-        print(f"Geo safety check error: {geo_err}")
+      except Exception:
+        pass
 
     marine_res = {}
     try:
       m_resp = requests.get(
-          "https://marine-api.open-meteo.com/v1/marine",
+          "[https://marine-api.open-meteo.com/v1/marine](https://marine-api.open-meteo.com/v1/marine)",
           params={
               "latitude": lat,
               "longitude": lon,
@@ -456,7 +464,7 @@ async def chat_fishery(
     if owm_key:
       try:
         w_resp = requests.get(
-            "https://api.openweathermap.org/data/2.5/weather",
+            "[https://api.openweathermap.org/data/2.5/weather](https://api.openweathermap.org/data/2.5/weather)",
             params={
                 "lat": lat,
                 "lon": lon,
@@ -507,14 +515,15 @@ async def chat_fishery(
       assert types is not None
       gemini_contents.append(
           types.Content(
-              role=role,
-              parts=[types.Part.from_text(text=turn["content"])]
+              role=role, parts=[types.Part.from_text(text=turn["content"])]
           )
       )
 
     assert types is not None
     gemini_contents.append(
-        types.Content(role="user", parts=[types.Part.from_text(text=user_prompt)])
+        types.Content(
+            role="user", parts=[types.Part.from_text(text=user_prompt)]
+        )
     )
 
     data = execute_with_fallback(system_instruction, gemini_contents)
@@ -530,7 +539,16 @@ async def chat_fishery(
     if session_data.get("title") == "New Advisory Chat" and user_prompt:
       clean_prompt = user_prompt.strip()
       lowered = clean_prompt.lower()
-      trivial_phrases = {"hello", "hi", "hey", "test", "try again", "help", "ok", "okay"}
+      trivial_phrases = {
+          "hello",
+          "hi",
+          "hey",
+          "test",
+          "try again",
+          "help",
+          "ok",
+          "okay",
+      }
 
       if clean_prompt and lowered not in trivial_phrases:
         words = clean_prompt.split()
@@ -540,8 +558,7 @@ async def chat_fishery(
         session_data["title"] = f"Sea Check ({status.replace('_', ' ').title()})"
 
     session_data["history"] = history
-    sessions[session_id] = session_data
-    save_user_sessions(user_id, sessions)
+    save_single_session_db(user_id, session_id, session_data)
 
     audio_b64 = None
     if gTTS:
@@ -551,8 +568,8 @@ async def chat_fishery(
         tts.write_to_fp(audio_buffer)
         audio_buffer.seek(0)
         audio_b64 = base64.b64encode(audio_buffer.read()).decode("utf-8")
-      except Exception as tts_err:
-        print(f"TTS generation error: {tts_err}")
+      except Exception:
+        pass
 
     return {
         "session_id": session_id,
@@ -565,5 +582,4 @@ async def chat_fishery(
     }
 
   except Exception as err:
-    print(f"Chat error: {err}")
     raise HTTPException(status_code=500, detail=str(err))
