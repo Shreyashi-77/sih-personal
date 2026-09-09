@@ -1,6 +1,7 @@
-import { ThermometerIcon, WavesIcon, WindIcon, Location01Icon } from '@hugeicons/core-free-icons'
+import { Cancel01Icon, ThermometerIcon, WavesIcon, WindIcon, Location01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import type { SafetyCheckResponse, WeatherData } from '@/lib/api'
+import { Button } from '@/components/ui/button'
 
 interface SelectedLocationBarProps {
   location: { lat: number; lon: number }
@@ -9,9 +10,10 @@ interface SelectedLocationBarProps {
   nearestPfz?: string
   loading: boolean
   error: string | null
+  onClose: () => void
 }
 
-export function SelectedLocationBar({ location, safety, weather, nearestPfz, loading, error }: SelectedLocationBarProps) {
+export function SelectedLocationBar({ location, safety, weather, nearestPfz, loading, error, onClose }: SelectedLocationBarProps) {
   const statusColor = safety?.status === 'SAFE'
     ? 'text-green-500'
     : safety?.status
@@ -19,17 +21,30 @@ export function SelectedLocationBar({ location, safety, weather, nearestPfz, loa
       : 'text-muted-foreground'
 
   return (
-    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-      <div className="flex min-w-0 items-center gap-3">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-full border border-primary/20 bg-primary/10 text-primary">
-          <HugeiconsIcon icon={Location01Icon} size={20} />
+    <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+      <div className="flex min-w-0 items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-full border border-primary/20 bg-primary/10 text-primary">
+            <HugeiconsIcon icon={Location01Icon} size={20} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-wide text-primary">Selected location</p>
+            <p className="truncate text-sm font-semibold">
+              {location.lat.toFixed(5)}° N, {Math.abs(location.lon).toFixed(5)}° {location.lon >= 0 ? 'E' : 'W'}
+            </p>
+          </div>
         </div>
-        <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wide text-primary">Selected location</p>
-          <p className="truncate text-sm font-semibold">
-            {location.lat.toFixed(5)}° N, {Math.abs(location.lon).toFixed(5)}° {location.lon >= 0 ? 'E' : 'W'}
-          </p>
-        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          onClick={onClose}
+          aria-label="Close selected location"
+          title="Close selected location"
+          className="text-muted-foreground hover:text-foreground"
+        >
+          <HugeiconsIcon icon={Cancel01Icon} size={18} />
+        </Button>
       </div>
 
       {loading ? (

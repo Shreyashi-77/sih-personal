@@ -104,6 +104,7 @@ export function DashboardPage() {
         <div className="rounded-3xl shadow-sm border border-primary/20 bg-card p-4 md:p-6 shrink-0">
           <SelectedLocationBar
             location={clickedLocation}
+            onClose={() => setClickedLocation(null)}
             safety={clickedReport.data?.safety}
             weather={clickedReport.data?.weather}
             loading={clickedReport.loading}
