@@ -21,36 +21,23 @@ export function SelectedLocationBar({ location, safety, weather, nearestPfz, loa
       : 'text-muted-foreground'
 
   return (
-    <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
-      <div className="flex min-w-0 items-start justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-full border border-primary/20 bg-primary/10 text-primary">
-            <HugeiconsIcon icon={Location01Icon} size={20} />
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-wide text-primary">Selected location</p>
-            <p className="truncate text-sm font-semibold">
-              {location.lat.toFixed(5)}° N, {Math.abs(location.lon).toFixed(5)}° {location.lon >= 0 ? 'E' : 'W'}
-            </p>
-          </div>
+    <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-4 md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-center">
+      <div className="col-span-2 flex min-w-0 items-center gap-3 md:col-span-1">
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-full border border-primary/20 bg-primary/10 text-primary">
+          <HugeiconsIcon icon={Location01Icon} size={20} />
         </div>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          onClick={onClose}
-          aria-label="Close selected location"
-          title="Close selected location"
-          className="text-muted-foreground hover:text-foreground"
-        >
-          <HugeiconsIcon icon={Cancel01Icon} size={18} />
-        </Button>
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-wide text-primary">Selected location</p>
+          <p className="truncate text-sm font-semibold">
+            {location.lat.toFixed(5)}° N, {Math.abs(location.lon).toFixed(5)}° {location.lon >= 0 ? 'E' : 'W'}
+          </p>
+        </div>
       </div>
 
       {loading ? (
-        <p className="text-sm text-muted-foreground animate-pulse">Loading location data...</p>
+        <p className="min-w-0 text-sm text-muted-foreground animate-pulse">Loading location data...</p>
       ) : error ? (
-        <p className="text-sm text-red-500">Location data unavailable.</p>
+        <p className="min-w-0 text-sm text-red-500">Location data unavailable.</p>
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:flex md:items-center md:gap-6">
           <SelectedValue icon={ThermometerIcon} label="Temperature" value={weather?.temp || 'N/A'} />
@@ -63,6 +50,18 @@ export function SelectedLocationBar({ location, safety, weather, nearestPfz, loa
           </div>
         </div>
       )}
+
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-sm"
+        onClick={onClose}
+        aria-label="Close selected location"
+        title="Close selected location"
+        className="self-center text-muted-foreground hover:text-foreground"
+      >
+        <HugeiconsIcon icon={Cancel01Icon} size={18} />
+      </Button>
     </div>
   )
 }
