@@ -2,6 +2,7 @@ import time
 
 from fastapi import FastAPI, Query, HTTPException
 from fastapi.responses import HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
 import requests
 
 from shapely.geometry import shape
