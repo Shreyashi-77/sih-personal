@@ -10,6 +10,15 @@ export class ApiError extends Error {
   }
 }
 
+export function getUserId(): string {
+  let uid = localStorage.getItem('orca_user_id');
+  if (!uid) {
+    uid = 'user_' + Math.random().toString(36).substring(2, 11);
+    localStorage.setItem('orca_user_id', uid);
+  }
+  return uid;
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response;
   try {
@@ -54,14 +63,14 @@ export interface ChatSession { session_id: string; title: string }
 export interface ChatHistoryEntry { role: 'user' | 'model'; content: string }
 export function chatFishery(message: string, lat: number, lon: number, sessionId?: string) {
   const body = new FormData();
-  body.append('message', message); body.append('lat', String(lat)); body.append('lon', String(lon));
+  body.append('message', message); body.append('lat', String(lat)); body.append('user_id', getUserId()); body.append('lon', String(lon));
   if (sessionId) body.append('session_id', sessionId);
   return request<ChatResponse>('/chat-fishery', { method: 'POST', body });
 }
-export const createChatSession = () => request<ChatSession>('/api/sessions/new', { method: 'POST' });
-export const getChatSessions = () => request<ChatSession[]>('/api/sessions');
-export const getChatSession = (sessionId: string) => request<{ title: string; history: ChatHistoryEntry[] }>(`/api/sessions/${encodeURIComponent(sessionId)}`);
-export const deleteChatSession = (sessionId: string) => request<{ status: string }>(`/api/sessions/${encodeURIComponent(sessionId)}`, { method: 'DELETE' });
+export const createChatSession = () => request<ChatSession>(`/api/sessions/new?user_id=${encodeURIComponent(getUserId())}`, { method: 'POST' });
+export const getChatSessions = () => request<ChatSession[]>(`/api/sessions?user_id=${encodeURIComponent(getUserId())}`);
+export const getChatSession = (sessionId: string) => request<{ title: string; history: ChatHistoryEntry[] }>(`/api/sessions/${encodeURIComponent(sessionId)}?user_id=${encodeURIComponent(getUserId())}`);
+export const deleteChatSession = (sessionId: string) => request<{ status: string }>(`/api/sessions/${encodeURIComponent(sessionId)}?user_id=${encodeURIComponent(getUserId())}`, { method: 'DELETE' });
 
 // Navigation and geofencing retain their existing UI; the current backend does not expose these endpoints.
 export interface RouteWaypoint { latitude: number; longitude: number; status: string }
