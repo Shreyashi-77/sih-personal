@@ -56,6 +56,25 @@ export interface FullReportResponse {
 export const getSafetyCheck = (lat: number, lon: number) => request<SafetyCheckResponse>(`/safety-check?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lon)}`);
 export const getNearestPFZ = (lat: number, lon: number) => request<NearestPFZResponse>(`/nearest-pfz?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lon)}`);
 export const getPFZLines = () => request<any>('/pfz-lines');
+export interface PFZDistanceResponse {
+  pfz_id: string;
+  distance_km: number;
+  nearest_point: {
+    latitude: number;
+    longitude: number;
+  };
+  properties: Record<string, any>;
+}
+
+export const getPFZDistance = (
+  latitude: number,
+  longitude: number,
+  pfzId: string
+) =>
+  request<PFZDistanceResponse>(
+    `/pfz-distance?latitude=${latitude}&longitude=${longitude}&pfz_id=${encodeURIComponent(pfzId)}`
+  );
+  
 export const getFullReport = (lat: number, lon: number) => request<FullReportResponse>(`/full-report?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lon)}`);
 
 export interface ChatResponse { session_id: string; reply: string; lang_code: string; audio_base64?: string; geo_status?: string; depth_m?: number | null; distance_to_imbl_m?: number | null }
