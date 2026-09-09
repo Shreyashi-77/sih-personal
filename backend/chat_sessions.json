@@ -23,5 +23,45 @@
         "content": "Your current GPS position is inland near Durgapur, West Bengal. The nearest maritime fishing grounds are in the northern Bay of Bengal off Digha and Sagar Island, approximately 180 kilometers to the south. Please consult live INCOIS PFZ bulletins for active thermal and chlorophyll boundary coordinates before setting sail from coastal harbors."
       }
     ]
+  },
+  "9d748d70-234b-4742-90f1-42546eab5e3b": {
+    "title": "Nearest Pfz Zone",
+    "history": [
+      {
+        "role": "user",
+        "content": "nearest pfz zone"
+      },
+      {
+        "role": "model",
+        "content": "You are currently inland near Durgapur. The nearest ocean Potential Fishing Zones (PFZ) are located in the northern Bay of Bengal off the coasts of Digha and the Sundarbans. Check local INCOIS advisory charts before sailing for real-time SST and chlorophyll coordinates."
+      }
+    ]
+  },
+  "user_ka1lmwe96": {
+    "8db1686c-e368-47e3-a6a5-494325df0b6a": {
+      "title": "Nearest Pfz",
+      "history": [
+        {
+          "role": "user",
+          "content": "nearest pfz"
+        },
+        {
+          "role": "model",
+          "content": "You are currently inland near Durgapur, West Bengal. The nearest marine Potential Fishing Zones (PFZ) are located in the northern Bay of Bengal off the coasts of Digha and Kakdwip. Please check updated INCOIS advisories before departing for coastal fishing zones."
+        },
+        {
+          "role": "user",
+          "content": "what about digha region"
+        },
+        {
+          "role": "model",
+          "content": "Off the Digha coast, productive fishing grounds are typically found 20 to 40 nautical miles offshore near continental shelf edges. Current coastal conditions generally feature moderate southeasterly winds, but always monitor local tidal currents and INCOIS bulletins before venturing deep into the northern Bay of Bengal."
+        }
+      ]
+    },
+    "95a54f4f-5860-47ac-89a0-5605943bd3ef": {
+      "title": "New Advisory Chat",
+      "history": []
+    }
   }
 }
