@@ -246,7 +246,6 @@ export function NavigationPage({ onBack }: NavigationPageProps) {
 
     setPfzLoading(false);
 
-    // Keep your real route calculation
     if (geo.lat != null && geo.lon != null) {
       try {
         const route = await getRoute(
@@ -262,9 +261,7 @@ export function NavigationPage({ onBack }: NavigationPageProps) {
       }
     }
   };
-  /*
-   * Distance to selected PFZ.
-   */
+
   const pfzDistance = selectedPfz?.distance_km ?? null;
 
   /*
