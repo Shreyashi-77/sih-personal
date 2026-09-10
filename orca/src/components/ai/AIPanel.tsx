@@ -42,6 +42,7 @@ export function AIPanel({ isOpen, onClose, initialQuery = '' }: AIPanelProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const recognitionRef = useRef<any>(null)
+  const requestControllerRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
     if (isOpen) {
@@ -88,6 +89,12 @@ export function AIPanel({ isOpen, onClose, initialQuery = '' }: AIPanelProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isTyping])
 
+  useEffect(() => {
+    if (!isOpen) {
+      requestControllerRef.current?.abort()
+    }
+  }, [isOpen])
+
   const handleSend = async (text: string) => {
     if (!text.trim()) return
 
@@ -101,6 +108,8 @@ export function AIPanel({ isOpen, onClose, initialQuery = '' }: AIPanelProps) {
     setInputValue('')
     setIsTyping(true)
     setRequestError(null)
+    const controller = new AbortController()
+    requestControllerRef.current = controller
 
     try {
       let activeSessionId = sessionId
@@ -110,7 +119,7 @@ export function AIPanel({ isOpen, onClose, initialQuery = '' }: AIPanelProps) {
         setSessionId(activeSessionId)
         localStorage.setItem('orca_session_id', activeSessionId)
       }
-      const response = await chatFishery(text, geo.lat, geo.lon, activeSessionId)
+      const response = await chatFishery(text, geo.lat, geo.lon, activeSessionId, controller.signal)
       setSessionId(response.session_id)
       localStorage.setItem('orca_session_id', response.session_id)
       setMessages(prev => [...prev, {
@@ -119,6 +128,7 @@ export function AIPanel({ isOpen, onClose, initialQuery = '' }: AIPanelProps) {
         content: response.reply
       }])
     } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return
       const message = error instanceof Error ? error.message : 'Unable to get an advisory.'
       setRequestError(message)
       setMessages(prev => [...prev, {
@@ -127,8 +137,17 @@ export function AIPanel({ isOpen, onClose, initialQuery = '' }: AIPanelProps) {
         content: `Unable to get an advisory: ${message}`
       }])
     } finally {
-      setIsTyping(false)
+      if (requestControllerRef.current === controller) {
+        requestControllerRef.current = null
+        setIsTyping(false)
+      }
     }
+  }
+
+  const stopResponse = () => {
+    requestControllerRef.current?.abort()
+    requestControllerRef.current = null
+    setIsTyping(false)
   }
 
   const startNewChat = async () => {
@@ -366,13 +385,27 @@ export function AIPanel({ isOpen, onClose, initialQuery = '' }: AIPanelProps) {
           >
             <HugeiconsIcon icon={Mic01Icon} size={20} />
           </button>
-          <button
-            onClick={() => handleSend(inputValue)}
-            disabled={!inputValue.trim() || isTyping}
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 disabled:opacity-50 disabled:hover:bg-blue-500 transition-colors shadow-sm"
-          >
-            <HugeiconsIcon icon={ArrowRight01Icon} size={20} />
-          </button>
+          {isTyping ? (
+            <button
+              type="button"
+              onClick={stopResponse}
+              title="Stop response"
+              aria-label="Stop response"
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl bg-red-500 text-white flex items-center justify-center hover:bg-red-600 focus-visible:outline-2 focus-visible:outline-red-500 transition-colors shadow-sm"
+            >
+              <HugeiconsIcon icon={Cancel01Icon} size={20} />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => handleSend(inputValue)}
+              disabled={!inputValue.trim()}
+              aria-label="Send message"
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 disabled:opacity-50 disabled:hover:bg-blue-500 transition-colors shadow-sm"
+            >
+              <HugeiconsIcon icon={ArrowRight01Icon} size={20} />
+            </button>
+          )}
         </div>
       </div>
     </div>,

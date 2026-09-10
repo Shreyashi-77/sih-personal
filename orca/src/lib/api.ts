@@ -23,7 +23,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response;
   try {
     response = await fetch(`${API_BASE_URL}${path}`, init);
-  } catch {
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw error;
+    }
     throw new ApiError(`Cannot reach ORCA services at ${API_BASE_URL}. Check that the backend is running.`);
   }
   if (!response.ok) {
@@ -80,11 +83,11 @@ export const getFullReport = (lat: number, lon: number) => request<FullReportRes
 export interface ChatResponse { session_id: string; reply: string; lang_code: string; audio_base64?: string; geo_status?: string; depth_m?: number | null; distance_to_imbl_m?: number | null }
 export interface ChatSession { session_id: string; title: string }
 export interface ChatHistoryEntry { role: 'user' | 'model'; content: string }
-export function chatFishery(message: string, lat: number, lon: number, sessionId?: string) {
+export function chatFishery(message: string, lat: number, lon: number, sessionId?: string, signal?: AbortSignal) {
   const body = new FormData();
   body.append('message', message); body.append('lat', String(lat)); body.append('user_id', getUserId()); body.append('lon', String(lon));
   if (sessionId) body.append('session_id', sessionId);
-  return request<ChatResponse>('/chat-fishery', { method: 'POST', body });
+  return request<ChatResponse>('/chat-fishery', { method: 'POST', body, signal });
 }
 export const createChatSession = () => request<ChatSession>(`/api/sessions/new?user_id=${encodeURIComponent(getUserId())}`, { method: 'POST' });
 export const getChatSessions = () => request<ChatSession[]>(`/api/sessions?user_id=${encodeURIComponent(getUserId())}`);
