@@ -90,6 +90,7 @@ export const createChatSession = () => request<ChatSession>(`/api/sessions/new?u
 export const getChatSessions = () => request<ChatSession[]>(`/api/sessions?user_id=${encodeURIComponent(getUserId())}`);
 export const getChatSession = (sessionId: string) => request<{ title: string; history: ChatHistoryEntry[] }>(`/api/sessions/${encodeURIComponent(sessionId)}?user_id=${encodeURIComponent(getUserId())}`);
 export const deleteChatSession = (sessionId: string) => request<{ status: string }>(`/api/sessions/${encodeURIComponent(sessionId)}?user_id=${encodeURIComponent(getUserId())}`, { method: 'DELETE' });
+export const clearChatSessions = () => request<{ status: string }>(`/api/sessions?user_id=${encodeURIComponent(getUserId())}`, { method: 'DELETE' });
 
 // Navigation and geofencing retain their existing UI; the current backend does not expose these endpoints.
 export interface RouteWaypoint { latitude: number; longitude: number; status: string }

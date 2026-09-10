@@ -6,6 +6,7 @@ import { useLanguage } from '@/lib/i18n'
 import { useGeolocation } from '@/hooks/useGeolocation'
 import {
   chatFishery,
+  clearChatSessions,
   createChatSession,
   deleteChatSession,
   getChatSession,
@@ -177,6 +178,24 @@ export function AIPanel({ isOpen, onClose, initialQuery = '' }: AIPanelProps) {
     }
   }
 
+  const removeAllChats = async () => {
+    if (sessions.length === 0 || !window.confirm('Delete all saved chats? This cannot be undone.')) return
+
+    setHistoryLoading(true)
+    try {
+      await clearChatSessions()
+      setSessions([])
+      setSessionId(null)
+      setMessages([])
+      localStorage.removeItem('orca_session_id')
+      setRequestError(null)
+    } catch (error) {
+      setRequestError(error instanceof Error ? error.message : 'Unable to delete chat history.')
+    } finally {
+      setHistoryLoading(false)
+    }
+  }
+
   const toggleVoiceInput = () => {
     if (isListening) {
       recognitionRef.current?.stop()
@@ -249,9 +268,18 @@ export function AIPanel({ isOpen, onClose, initialQuery = '' }: AIPanelProps) {
           <aside className="w-72 shrink-0 overflow-y-auto border-r border-border/40 bg-card/30 p-4">
             <div className="mb-4 flex items-center justify-between gap-2">
               <h3 className="text-sm font-semibold">Chat history</h3>
-              <button onClick={() => void startNewChat()} className="rounded-lg bg-primary px-3 py-1.5 text-xs text-primary-foreground hover:bg-primary/90">
-                New chat
-              </button>
+              <div className="flex items-center gap-2">
+                <button onClick={() => void startNewChat()} className="rounded-lg bg-primary px-3 py-1.5 text-xs text-primary-foreground hover:bg-primary/90">
+                  New chat
+                </button>
+                <button
+                  onClick={() => void removeAllChats()}
+                  disabled={sessions.length === 0 || historyLoading}
+                  className="rounded-lg px-2 py-1.5 text-xs text-red-500 hover:bg-red-500/10 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Delete all
+                </button>
+              </div>
             </div>
             {historyLoading && <p className="mb-3 text-xs text-muted-foreground">Loading history...</p>}
             <div className="space-y-1">
