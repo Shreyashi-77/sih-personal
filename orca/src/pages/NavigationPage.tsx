@@ -64,6 +64,116 @@ export function NavigationPage({ onBack }: NavigationPageProps) {
 
   const [pfzLoading, setPfzLoading] = useState(false);
 
+  const DEMO_PFZ_DATA: Record<string, any> = {
+    "pfzlines.26": {
+      pfz_id: "PFZ-26",
+      distance_km: 12.4,
+      nearest_point: {
+        latitude: 20.1,
+        longitude: 87.9,
+      },
+      safety: {
+        overall_status: "safe",
+        warnings: [],
+      },
+      weather: {
+        wind: "11 km/h",
+        waves: "1.2 m",
+        temp: "28°C",
+      },
+    },
+
+    "pfzlines.34": {
+      pfz_id: "PFZ-34",
+      distance_km: 18.7,
+      nearest_point: {
+        latitude: 20.25,
+        longitude: 88.05,
+      },
+      safety: {
+        overall_status: "safe",
+        warnings: [],
+      },
+      weather: {
+        wind: "14 km/h",
+        waves: "1.4 m",
+        temp: "28°C",
+      },
+    },
+
+    "pfzlines.39": {
+      pfz_id: "PFZ-39",
+      distance_km: 24.3,
+      nearest_point: {
+        latitude: 20.4,
+        longitude: 88.2,
+      },
+      safety: {
+        overall_status: "caution",
+        warnings: ["Moderate wave conditions"],
+      },
+      weather: {
+        wind: "21 km/h",
+        waves: "2.1 m",
+        temp: "27°C",
+      },
+    },
+
+    "pfzlines.41": {
+      pfz_id: "PFZ-41",
+      distance_km: 31.8,
+      nearest_point: {
+        latitude: 20.55,
+        longitude: 88.35,
+      },
+      safety: {
+        overall_status: "safe",
+        warnings: [],
+      },
+      weather: {
+        wind: "13 km/h",
+        waves: "1.3 m",
+        temp: "28°C",
+      },
+    },
+
+    "pfzlines.52": {
+      pfz_id: "PFZ-52",
+      distance_km: 39.2,
+      nearest_point: {
+        latitude: 20.7,
+        longitude: 88.5,
+      },
+      safety: {
+        overall_status: "warning",
+        warnings: ["Strong winds", "High waves"],
+      },
+      weather: {
+        wind: "27 km/h",
+        waves: "2.8 m",
+        temp: "26°C",
+      },
+    },
+
+    "pfzlines.35": {
+      pfz_id: "PFZ-35",
+      distance_km: 46.5,
+      nearest_point: {
+        latitude: 20.85,
+        longitude: 88.65,
+      },
+      safety: {
+        overall_status: "caution",
+        warnings: ["Increasing wave activity"],
+      },
+      weather: {
+        wind: "18 km/h",
+        waves: "1.9 m",
+        temp: "27°C",
+      },
+    },
+  };
+
   /*
    * Load all PFZ lines.
    */
@@ -108,56 +218,50 @@ export function NavigationPage({ onBack }: NavigationPageProps) {
    * Handle clicking a PFZ line on the map.
    */
   const handlePfzLineClick = async (pfzId: string) => {
-    if (geo.lat == null || geo.lon == null) {
+    console.log("🎯 DEMO PFZ SELECTED:", pfzId);
+
+    const demo = DEMO_PFZ_DATA[pfzId];
+
+    if (!demo) {
+      console.log("No demo data for this PFZ:", pfzId);
       return;
     }
 
-    try {
-      setPfzLoading(true);
+    setPfzLoading(true);
+    setSelectedPfzId(pfzId);
 
-      setSelectedPfzId(pfzId);
+    const selectedData = {
+      pfz_id: demo.pfz_id,
+      distance_km: demo.distance_km,
+      nearest_point: demo.nearest_point,
+      properties: {},
+    };
 
-      /*
-       * Find distance from the user's
-       * current location to this PFZ.
-       */
-      const distanceData = await getPFZDistance(geo.lat, geo.lon, pfzId);
+    setSelectedPfz(selectedData);
 
-      setSelectedPfz(distanceData);
+    setPfzConditions({
+      safety: demo.safety,
+      weather: demo.weather,
+    });
 
-      /*
-       * Get safety + weather information
-       * for the closest point of the PFZ.
-       */
-      const report = await getFullReport(
-        distanceData.nearest_point.latitude,
-        distanceData.nearest_point.longitude,
-      );
+    setPfzLoading(false);
 
-      setPfzConditions(report);
+    if (geo.lat != null && geo.lon != null) {
+      try {
+        const route = await getRoute(
+          geo.lat,
+          geo.lon,
+          demo.nearest_point.latitude,
+          demo.nearest_point.longitude,
+        );
 
-      /*
-       * Get route from the user to the
-       * selected PFZ.
-       */
-      const route = await getRoute(
-        geo.lat,
-        geo.lon,
-        distanceData.nearest_point.latitude,
-        distanceData.nearest_point.longitude,
-      );
-
-      setRouteData(route);
-    } catch (error) {
-      console.error("PFZ selection failed:", error);
-    } finally {
-      setPfzLoading(false);
+        setRouteData(route);
+      } catch (error) {
+        console.error("Route calculation failed:", error);
+      }
     }
   };
 
-  /*
-   * Distance to selected PFZ.
-   */
   const pfzDistance = selectedPfz?.distance_km ?? null;
 
   /*

@@ -400,14 +400,24 @@ export function MapView({
               opacity: 0.9,
             }}
             onEachFeature={(feature, layer) => {
-              const pfzId = String(feature.id || "");
-
               const properties = feature.properties || {};
+
+              const pfzId = String(
+                feature.id ??
+                  properties.pfz_id ??
+                  properties.PFZ_ID ??
+                  properties.id ??
+                  properties.ID ??
+                  properties.pfzId ??
+                  properties.PFZID ??
+                  "",
+              );
 
               const label =
                 properties.name ||
                 properties.NAME ||
                 properties.pfz_id ||
+                properties.PFZ_ID ||
                 pfzId ||
                 "Potential Fishing Zone";
 
@@ -421,6 +431,8 @@ export function MapView({
 
               layer.on({
                 click: () => {
+                  console.log("🔥 PFZ CLICKED:", pfzId);
+
                   if (pfzId) {
                     onPfzLineClick?.(pfzId);
                   }
