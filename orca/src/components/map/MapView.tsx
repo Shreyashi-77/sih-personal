@@ -13,6 +13,7 @@ import {
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { cn } from "@/lib/utils";
+import { Maximize2, Minimize2 } from "lucide-react";
 
 // Custom Leaflet icons to preserve the premium aesthetic
 const createUserIcon = () => {
@@ -52,6 +53,8 @@ interface Location {
 
 interface MapViewProps {
   className?: string;
+  isFullscreen?: boolean;
+  onToggleFullscreen?: () => void;
   userLocation?: Location;
   clickedLocation?: Location;
   onMapClick?: (location: Location) => void;
@@ -117,14 +120,38 @@ function MapController({
   return null;
 }
 
+function MapSizeController({ isFullscreen }: { isFullscreen: boolean }) {
+  const map = useMap();
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => map.invalidateSize());
+    return () => cancelAnimationFrame(frame);
+  }, [map, isFullscreen]);
+
+  return null;
+}
+
 // Custom Zoom Controls using existing design
-function CustomZoomControls() {
+function CustomZoomControls({
+  isFullscreen = false,
+  onToggleFullscreen,
+}: Pick<MapViewProps, "isFullscreen" | "onToggleFullscreen">) {
   const map = useMap();
   return (
-    <div className="absolute top-6 right-6 flex flex-col bg-card/80 backdrop-blur-md rounded-2xl shadow-xl border border-border/50 overflow-hidden z-400 pointer-events-auto">
+    <div className="absolute top-6 right-6 flex flex-col gap-2 z-400 pointer-events-auto">
+      {onToggleFullscreen && (
+        <button
+          onClick={onToggleFullscreen}
+          className="w-12 h-12 flex items-center justify-center rounded-2xl bg-card/80 backdrop-blur-md shadow-xl border border-border/50 text-foreground hover:bg-muted/50 transition-colors cursor-pointer"
+          aria-label={isFullscreen ? "Exit fullscreen map" : "View map fullscreen"}
+          title={isFullscreen ? "Exit fullscreen map" : "View map fullscreen"}
+        >
+          {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
+        </button>
+      )}
       <button
         onClick={() => map.zoomIn()}
-        className="w-12 h-12 flex items-center justify-center text-foreground hover:bg-muted/50 transition-colors border-b border-border/50 cursor-pointer"
+        className="w-12 h-12 flex items-center justify-center rounded-t-2xl bg-card/80 backdrop-blur-md shadow-xl border border-border/50 text-foreground hover:bg-muted/50 transition-colors cursor-pointer"
         aria-label="Zoom In"
       >
         <svg
@@ -141,7 +168,7 @@ function CustomZoomControls() {
       </button>
       <button
         onClick={() => map.zoomOut()}
-        className="w-12 h-12 flex items-center justify-center text-foreground hover:bg-muted/50 transition-colors cursor-pointer"
+        className="w-12 h-12 flex items-center justify-center rounded-b-2xl bg-card/80 backdrop-blur-md shadow-xl border border-border/50 text-foreground hover:bg-muted/50 transition-colors cursor-pointer"
         aria-label="Zoom Out"
       >
         <svg
@@ -174,6 +201,8 @@ function MapClickHandler({
 
 export function MapView({
   className,
+  isFullscreen = false,
+  onToggleFullscreen,
   userLocation,
   clickedLocation,
   onMapClick,
@@ -304,8 +333,12 @@ export function MapView({
           userLocation={userLocation}
           pfzLocations={pfzLocations}
         />
+        <MapSizeController isFullscreen={isFullscreen} />
         <MapClickHandler onMapClick={onMapClick} />
-        <CustomZoomControls />
+        <CustomZoomControls
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={onToggleFullscreen}
+        />
 
         {userLocation && userIcon && (
           <Marker

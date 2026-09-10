@@ -17,6 +17,7 @@ export function DashboardPage() {
   const [selectedPfzIndex, setSelectedPfzIndex] = useState(0);
   const [clickedLocation, setClickedLocation] = useState<{ lat: number; lon: number } | null>(null);
   const [pfzLines, setPfzLines] = useState<any | null>(null);
+  const [isMapFullscreen, setIsMapFullscreen] = useState(false);
 
   const clickedReport = useOrcaAPI(clickedLocation?.lat ?? null, clickedLocation?.lon ?? null);
 
@@ -55,9 +56,13 @@ export function DashboardPage() {
     <div className="flex-1 flex flex-col p-3 md:p-6 pt-0 gap-4 md:gap-6 overflow-y-auto min-h-0">
       
       {/* Map Section */}
-      <div className="flex-1 min-h-[40vh] md:min-h-0 relative rounded-3xl overflow-hidden bg-muted border border-border/40 shadow-sm isolate">
+      <div className={isMapFullscreen
+        ? "fixed inset-0 z-100 bg-muted"
+        : "flex-1 min-h-[40vh] md:min-h-0 relative rounded-3xl overflow-hidden bg-muted border border-border/40 shadow-sm isolate"}>
         <MapView 
           className="w-full h-full" 
+          isFullscreen={isMapFullscreen}
+          onToggleFullscreen={() => setIsMapFullscreen((fullscreen) => !fullscreen)}
           userLocation={userLocation}
           clickedLocation={clickedLocation ?? undefined}
           onMapClick={setClickedLocation}
@@ -93,14 +98,14 @@ export function DashboardPage() {
       </div>
 
       {/* Middle Section: Conditions */}
-      <div className="rounded-3xl shadow-sm border border-border/40 bg-card p-4 md:p-6 shrink-0">
+      {!isMapFullscreen && <div className="rounded-3xl shadow-sm border border-border/40 bg-card p-4 md:p-6 shrink-0">
         <ConditionsBar 
           safety={data?.safety}
           weather={data?.weather}
         />
-      </div>
+      </div>}
 
-      {clickedLocation && (
+      {clickedLocation && !isMapFullscreen && (
         <div className="rounded-3xl shadow-sm border border-primary/20 bg-card p-4 md:p-6 shrink-0">
           <SelectedLocationBar
             location={clickedLocation}
@@ -115,9 +120,9 @@ export function DashboardPage() {
       )}
 
       {/* Bottom Section: AI Chat */}
-      <div className="mt-auto shrink-0 pb-4 md:pb-0">
+      {!isMapFullscreen && <div className="mt-auto shrink-0 pb-4 md:pb-0">
         <AIChatBar />
-      </div>
+      </div>}
 
     </div>
   )

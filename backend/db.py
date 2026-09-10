@@ -19,7 +19,7 @@ def get_user_sessions_db(user_id: str) -> dict:
     return user_doc["sessions"]
 
 
-def save_single_session_db(user_id: str, session_id: str, session_data: dict, history: list = None):
+def save_single_session_db(user_id: str, session_id: str, session_data: dict, history: list = None): # type: ignore
     """
     Atomically updates or creates a single chat session for a user without affecting others.
     Supports passing a dictionary (`session_data`) OR individual parameters (`title`, `history`).
@@ -52,7 +52,7 @@ def delete_session_db(user_id: str, session_id: str):
     )
 
 
-def clear_user_sessions_db(user_id: str = None):
+def clear_user_sessions_db(user_id: str = None): # type: ignore
     """
     Clears session history from MongoDB Atlas.
     - If user_id is provided, removes the 'sessions' object or document for that user.
