@@ -65,53 +65,39 @@ export function NavigationPage({ onBack }: NavigationPageProps) {
   const [pfzLoading, setPfzLoading] = useState(false);
 
   const DEMO_PFZ_DATA: Record<string, any> = {
-    "pfzlines.26": {
-      pfz_id: "PFZ-26",
-      distance_km: 12.4,
+    "pfzlines.1": {
+      pfz_id: "PFZ-1",
       nearest_point: {
-        latitude: 20.1,
-        longitude: 87.9,
+        latitude: 11.86454384,
+        longitude: 75.00932799,
       },
-      safety: {
-        overall_status: "safe",
-        warnings: [],
-      },
-      weather: {
-        wind: "11 km/h",
-        waves: "1.2 m",
-        temp: "28°C",
-      },
-    },
-
-    "pfzlines.34": {
-      pfz_id: "PFZ-34",
-      distance_km: 18.7,
-      nearest_point: {
-        latitude: 20.25,
-        longitude: 88.05,
-      },
-      safety: {
-        overall_status: "safe",
-        warnings: [],
-      },
-      weather: {
-        wind: "14 km/h",
-        waves: "1.4 m",
-        temp: "28°C",
-      },
-    },
-
-    "pfzlines.39": {
-      pfz_id: "PFZ-39",
-      distance_km: 24.3,
-      nearest_point: {
-        latitude: 20.4,
-        longitude: 88.2,
-      },
+      distance_km: 28.6,
       safety: {
         overall_status: "caution",
         warnings: ["Moderate wave conditions"],
       },
+      weather: {
+        wind: "19 km/h",
+        waves: "1.8 m",
+        temp: "27°C",
+      },
+    },
+    "pfzlines.39": {
+      pfz_id: "PFZ-39",
+
+      // Actual point ON PFZ-39
+      nearest_point: {
+        latitude: 10.07096166,
+        longitude: 75.91907921,
+      },
+
+      distance_km: 24.3,
+
+      safety: {
+        overall_status: "caution",
+        warnings: ["Moderate wave conditions"],
+      },
+
       weather: {
         wind: "21 km/h",
         waves: "2.1 m",
@@ -119,35 +105,45 @@ export function NavigationPage({ onBack }: NavigationPageProps) {
       },
     },
 
-    "pfzlines.41": {
-      pfz_id: "PFZ-41",
-      distance_km: 31.8,
+    "pfzlines.33": {
+      pfz_id: "PFZ-33",
+
+      // Actual point ON PFZ-33
       nearest_point: {
-        latitude: 20.55,
-        longitude: 88.35,
+        latitude: 14.34447362,
+        longitude: 74.08510964,
       },
+
+      distance_km: 18.7,
+
       safety: {
         overall_status: "safe",
         warnings: [],
       },
+
       weather: {
-        wind: "13 km/h",
-        waves: "1.3 m",
+        wind: "14 km/h",
+        waves: "1.4 m",
         temp: "28°C",
       },
     },
 
     "pfzlines.52": {
       pfz_id: "PFZ-52",
-      distance_km: 39.2,
+
+      // Actual point ON PFZ-52
       nearest_point: {
-        latitude: 20.7,
-        longitude: 88.5,
+        latitude: 13.2630086,
+        longitude: 81.56316072,
       },
+
+      distance_km: 39.2,
+
       safety: {
         overall_status: "warning",
         warnings: ["Strong winds", "High waves"],
       },
+
       weather: {
         wind: "27 km/h",
         waves: "2.8 m",
@@ -155,17 +151,68 @@ export function NavigationPage({ onBack }: NavigationPageProps) {
       },
     },
 
+    "pfzlines.50": {
+      pfz_id: "PFZ-50",
+
+      // Actual point ON PFZ-50
+      nearest_point: {
+        latitude: 13.99588259,
+        longitude: 80.90761921,
+      },
+
+      distance_km: 31.8,
+
+      safety: {
+        overall_status: "safe",
+        warnings: [],
+      },
+
+      weather: {
+        wind: "13 km/h",
+        waves: "1.3 m",
+        temp: "28°C",
+      },
+    },
+
+    "pfzlines.51": {
+      pfz_id: "PFZ-51",
+
+      // Actual point ON PFZ-51
+      nearest_point: {
+        latitude: 13.52355958,
+        longitude: 80.87073756,
+      },
+
+      distance_km: 34.5,
+
+      safety: {
+        overall_status: "safe",
+        warnings: [],
+      },
+
+      weather: {
+        wind: "16 km/h",
+        waves: "1.5 m",
+        temp: "28°C",
+      },
+    },
+
     "pfzlines.35": {
       pfz_id: "PFZ-35",
-      distance_km: 46.5,
+
+      // Actual point ON PFZ-35
       nearest_point: {
-        latitude: 20.85,
-        longitude: 88.65,
+        latitude: 12.64196927,
+        longitude: 74.69603625,
       },
+
+      distance_km: 46.5,
+
       safety: {
         overall_status: "caution",
         warnings: ["Increasing wave activity"],
       },
+
       weather: {
         wind: "18 km/h",
         waves: "1.9 m",
@@ -173,7 +220,6 @@ export function NavigationPage({ onBack }: NavigationPageProps) {
       },
     },
   };
-
   /*
    * Load all PFZ lines.
    */
@@ -223,13 +269,14 @@ export function NavigationPage({ onBack }: NavigationPageProps) {
     const demo = DEMO_PFZ_DATA[pfzId];
 
     if (!demo) {
-      console.log("No demo data for this PFZ:", pfzId);
+      console.warn("No demo data for this PFZ:", pfzId);
       return;
     }
 
     setPfzLoading(true);
     setSelectedPfzId(pfzId);
 
+    // Show demo information
     const selectedData = {
       pfz_id: demo.pfz_id,
       distance_km: demo.distance_km,
@@ -244,8 +291,7 @@ export function NavigationPage({ onBack }: NavigationPageProps) {
       weather: demo.weather,
     });
 
-    setPfzLoading(false);
-
+    // Route to the ACTUAL PFZ coordinate
     if (geo.lat != null && geo.lon != null) {
       try {
         const route = await getRoute(
@@ -255,13 +301,21 @@ export function NavigationPage({ onBack }: NavigationPageProps) {
           demo.nearest_point.longitude,
         );
 
+        console.log("🛥️ Route destination:", {
+          latitude: demo.nearest_point.latitude,
+          longitude: demo.nearest_point.longitude,
+        });
+
+        console.log("🛥️ Route:", route);
+
         setRouteData(route);
       } catch (error) {
-        console.error("Route calculation failed:", error);
+        console.error("❌ Route calculation failed:", error);
       }
     }
-  };
 
+    setPfzLoading(false);
+  };
   const pfzDistance = selectedPfz?.distance_km ?? null;
 
   /*
